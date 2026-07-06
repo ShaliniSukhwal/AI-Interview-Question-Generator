@@ -24,11 +24,11 @@ app = FastAPI(
 # -------------------------
 class InterviewRequest(BaseModel):
     role: str = Field(..., example="UI UX Designer")
+    company: str = Field(..., example="Google")
     experience: str = Field(..., example="5 Years")
     difficulty: str = Field(..., example="Intermediate")
     question_count: int = Field(..., ge=1, le=20, example=10)
     question_type: str = Field(..., example="Technical")
-
 
 # -------------------------
 # Routes
@@ -52,23 +52,24 @@ def health():
 def generate_questions(data: InterviewRequest):
 
     prompt = f"""
-You are an expert interviewer.
+You are a senior interviewer at {data.company}.
 
-Generate {data.question_count} {data.difficulty} interview questions.
+Generate exactly {data.question_count} interview questions.
 
-Role:
-{data.role}
+Candidate Details:
 
-Experience:
-{data.experience}
-
-Question Type:
-{data.question_type}
+Role: {data.role}
+Experience: {data.experience}
+Difficulty: {data.difficulty}
+Question Type: {data.question_type}
 
 Rules:
-- Only return interview questions.
-- Do not give answers.
-- Keep questions professional.
+
+- Return only interview questions.
+- No introduction.
+- No explanation.
+- No answers.
+- Number each question.
 """
 
     try:
@@ -83,17 +84,16 @@ Rules:
     for q in response.text.split("\n")
     if q.strip()
 ]
-
         return {
-            "success": True,
-            "role": data.role,
-            "experience": data.experience,
-            "difficulty": data.difficulty,
-            "question_type": data.question_type,
-            "total_questions": len(questions),
-            "questions": questions
-        }
-
+                "success": True,
+                "company": data.company,
+                "role": data.role,
+                "experience": data.experience,
+                "difficulty": data.difficulty,
+                "question_type": data.question_type,
+                "total_questions": len(questions),
+                "questions": questions
+            }
     except Exception as e:
 
         raise HTTPException(
