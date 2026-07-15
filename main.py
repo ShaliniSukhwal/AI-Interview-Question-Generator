@@ -4,6 +4,11 @@ from dotenv import load_dotenv
 from google import genai
 import os
 
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi import Request
+
 # Load environment variables
 load_dotenv()
 
@@ -18,6 +23,9 @@ app = FastAPI(
     version="1.0.0"
 )
 
+templates = Jinja2Templates(directory="templates")
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # -------------------------
 # Models
@@ -47,6 +55,12 @@ def health():
         "status": "Running"
     }
 
+@app.get("/app", response_class=HTMLResponse)
+def frontend(request: Request):
+    return templates.TemplateResponse(
+        "index.html",
+        {"request": request}
+    )
 
 @app.post("/generate")
 def generate_questions(data: InterviewRequest):
